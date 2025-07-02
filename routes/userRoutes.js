@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../configuration/bd.js';
 import dotenv from "dotenv";
+import checkToken from '../middleware/checkToken.js';
 
 // création du router permettant de gérer les routes liées aux utilisateurs
 const router = express.Router();
@@ -69,5 +70,31 @@ router.post('/login', async (req, res) => {
 
     }
 });
+
+// route de récupération des informations utilisateur
+router.get('/profile', checkToken, async (req,res) => {
+    // récupération de l'id de l'utilisateur à partir du token
+    // le token est vérifié par le middleware checkToken
+    const userId = req.user.idUser;
+
+    const getProfile = "SELECT idUser, name, mail FROM users WHERE idUser = ?;";
+
+    try {
+        const [result] = await db.query(getProfile, [userId]);
+
+        if (result.length > 0) {
+            res.status(200).json(result[0]);
+        } else {
+            res.status(404).json({message: "utilisateur non trouvé"});
+        }
+
+    } catch (error) {
+        res.status(500).json({message: "erreur lors de la récupération du profil", error});
+        console.log(error);
+    }
+
+    console.log("idUser = ",userId);
+
+})
 
 export default router;
