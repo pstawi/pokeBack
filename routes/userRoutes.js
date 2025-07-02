@@ -95,6 +95,26 @@ router.get('/profile', checkToken, async (req,res) => {
 
     console.log("idUser = ",userId);
 
-})
+});
+
+// route de mise à jour du profil utilisateur
+router.put('/profile/update', checkToken, async (req, res) => {
+    // récupération de l'id de l'utilisateur à partir du token
+    const userId = req.user.idUser;
+    // préparation de la requete de mise à jour
+    const updateUser = "UPDATE users SET name = ?, mail = ? WHERE idUser = ?;";
+    // récupération des informations à mettre à jour
+    const {name, mail} = req.body;
+
+    try {
+        // utilisation de la connexion bdd pour executer la requete
+        await db.query(updateUser, [name, mail, userId]);
+        // envoi de la réponse
+        res.status(200).json({message: "profil mis à jour"});
+    } catch (error) {
+        res.status(500).json({message: "erreur lors de la mise à jour du profil", error});
+        console.log(error);
+    }
+});     
 
 export default router;
