@@ -117,4 +117,44 @@ router.put('/profile/update', checkToken, async (req, res) => {
     }
 });     
 
+// route modification du mot de passe
+router.put('/profile/password', checkToken, async (req, res) => {
+    // récupération de l'id de l'utilisateur à partir du token
+    const userId = req.user.idUser;
+    // préparation de la requete de mise à jour
+    const updatePassword = "UPDATE users SET password = ? WHERE idUser = ?;";
+    // récupération des informations à mettre à jour
+    const {oldPassword, newPassword} = req.body;
+
+    try {
+        // récupération de l'utilisateur pour vérifier l'ancien mot de passe
+        const selectUser = "SELECT password FROM users WHERE idUser = ?;";
+        const [result] = await db.query(selectUser, [userId]);
+
+        if (result.length > 0) {
+            const userData = result[0];
+            // vérification de l'ancien mot de passe
+            const checkOldPassword = await bcrypt.compare(oldPassword, userData.password);
+
+            if (checkOldPassword) {
+                // cryptage du nouveau mot de passe
+                const cryptedNewPassword = await bcrypt.hashSync(newPassword, 10);
+                // utilisation de la connexion bdd pour executer la requete
+                await db.query(updatePassword, [cryptedNewPassword, userId]);
+                res.status(200).json({message: "mot de passe mis à jour"});
+            } else {
+                res.status(403).json({message: "ancien mot de passe incorrect"});
+            }
+        } else {
+            res.status(404).json({message: "utilisateur non trouvé"});
+        }
+        
+    } catch (error) {
+        res.status(500).json({message: "erreur lors de la mise à jour du mot de passe", error});
+        console.log(error);
+    }
+}
+);
+
+
 export default router;
