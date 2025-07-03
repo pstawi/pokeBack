@@ -31,7 +31,7 @@ router.post('/teams/:idTeams/pokemon', checkToken, async (req, res) => {
 
     // récupération de l'équipe pour vérifier la position du pokemon
     const equipePokemon = "SELECT pkm1, pkm2, pkm3, pkm4, pkm5, pkm6 FROM teams WHERE idTeams = ?;"
-    
+
 
     try {
         // récupération de l'équipe dans la bdd
@@ -77,10 +77,10 @@ router.post('/teams/:idTeams/pokemon', checkToken, async (req, res) => {
         await db.query(ajoutPokemon, [pokemonName, idTeams]);
 
         res.status(200).json({ message: `Le Pokémon ${pokemonName} a été ajouté à l'équipe avec succès` });
-        
+
     } catch (error) {
         res.status(500).json({ message: "Erreur lors de l'ajout du Pokémon à l'équipe", error });
-        
+
     }
 });
 
@@ -99,6 +99,25 @@ router.get('/chooseTeams', checkToken, async (req, res) => {
 
     }
 });
-    
+
+// route pour récupérer les équipe d'un utilisateur
+router.get('/userTeams', checkToken, async (req, res) => {
+    const userId = req.user.idUser; // Récupération de l'ID utilisateur depuis le token
+    const getUserTeams = "SELECT teamName, pkm1, pkm2, pkm3, pkm4, pkm5, pkm6, idTeams FROM teams WHERE userId = ?;";
+
+    try {
+
+        const [userTeams] = await db.query(getUserTeams, [userId]);
+
+        res.status(200).json(userTeams);
+
+    } catch (error) {
+
+        res.status(400).json({ message: "cpt" })
+        console.error(error);
+
+    }
+})
+
 
 export default router;
