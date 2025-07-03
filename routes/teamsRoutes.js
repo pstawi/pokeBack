@@ -83,6 +83,22 @@ router.post('/teams/:idTeams/pokemon', checkToken, async (req, res) => {
         
     }
 });
+
+// route pour récupérer les équipes d'un utilisateur
+router.get('/chooseTeams', checkToken, async (req, res) => {
+    const userId = req.user.idUser; // Récupération de l'ID utilisateur depuis le token
+    const getTeams = "SELECT idTeams, teamName FROM teams WHERE userId = ?;";
+
+    try {
+        // Exécution de la requête pour récupérer les équipes de l'utilisateur
+        const [teams] = await db.query(getTeams, [userId]);
+        res.status(200).json(teams);
+
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la récupération des équipes", error });
+
+    }
+});
     
 
 export default router;
