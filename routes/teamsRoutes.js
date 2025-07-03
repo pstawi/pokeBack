@@ -87,7 +87,7 @@ router.post('/teams/:idTeams/pokemon', checkToken, async (req, res) => {
 // route pour récupérer les équipes d'un utilisateur
 router.get('/chooseTeams', checkToken, async (req, res) => {
     const userId = req.user.idUser; // Récupération de l'ID utilisateur depuis le token
-    const getTeams = "SELECT idTeams, teamName FROM teams WHERE userId = ?;";
+    const getTeams = "select * from teams where userId = ? and ( pkm1 is null or pkm2 is null or pkm3 is null or pkm4 is null or pkm5 is null or pkm6 is null);";
 
     try {
         // Exécution de la requête pour récupérer les équipes de l'utilisateur
