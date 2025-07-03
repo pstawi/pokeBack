@@ -153,8 +153,7 @@ router.put('/profile/password', checkToken, async (req, res) => {
         res.status(500).json({message: "erreur lors de la mise à jour du mot de passe", error});
         console.log(error);
     }
-}
-);
+});
 
 
 export default router;
