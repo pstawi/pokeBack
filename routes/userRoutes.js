@@ -1,159 +1,26 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import db from '../configuration/bd.js';
-import dotenv from "dotenv";
 import checkToken from '../middleware/checkToken.js';
+import {register, login, getProfile, updateProfile, updatePassword} from '../controllers/userControllers.js';
 
 // création du router permettant de gérer les routes liées aux utilisateurs
 const router = express.Router();
-dotenv.config();
 
-    // route d'inscription utilisateur
-router.post('/register', async (req, res) => {
-    // récupération des information utilisateur
-    const {name, mail, password} = req.body;
-    // préparation de la requete
-    const insertUser = "INSERT INTO users (name, mail, password) VALUES (?,?,?);";
 
-    try {
-        // cryptage du password
-        const cryptedPassword = await bcrypt.hashSync(password, 10);
-
-        // utilisation de la connexion bdd pour executer la requete
-        await db.query(insertUser, [name, mail, cryptedPassword])
-        res.status(201).json({ message: "utilisateur créé"});
-        
-    } catch (error) {
-        // gestion en cas d'erreur
-        res.status(500).json({message: "erreur lors de l'inscription", error})
-        
-    }
-});
+    // route d'inscription utilisateur avec appel de la fonction register
+    // cette fonction est importée depuis le fichier userControllers.js
+router.post('/register', register);
 
 // route de connexion
-router.post('/login', async (req, res) => {
-    const {mail, password} = req.body;
-    const selectUser = "SELECT idUser, name, password from users where mail like ?;";
-
-    try{
-
-        const [result] = await db.query(selectUser, [mail])
-
-        const userData = result[0];
-
-        if (result){
-
-            const checkPassword = await bcrypt.compare(password, userData.password);
-            
-            if (checkPassword == true){
-
-                // création du token
-                const token = jwt.sign({idUser: userData.idUser, username: userData.name}, process.env.SECRET_KEY, {expiresIn: "1h"});
-
-                res.status(201).json({
-                    message: "connexion autorisé",
-                    token: token
-                });
-            } else {
-                res.status(403).json({message: "accès refusé"});
-            }
-
-        } else {
-            res.status(104).json({message: "utilisateur inconnu"})
-        }
-
-    } catch (error) {
-
-        res.status(500).json({message: "erreur lors de la connexion", error})
-        console.log(error);
-
-    }
-});
+router.post('/login', login);
 
 // route de récupération des informations utilisateur
-router.get('/profile', checkToken, async (req,res) => {
-    // récupération de l'id de l'utilisateur à partir du token
-    // le token est vérifié par le middleware checkToken
-    const userId = req.user.idUser;
-
-    const getProfile = "SELECT idUser, name, mail FROM users WHERE idUser = ?;";
-
-    try {
-        const [result] = await db.query(getProfile, [userId]);
-
-        if (result.length > 0) {
-            res.status(200).json(result[0]);
-        } else {
-            res.status(404).json({message: "utilisateur non trouvé"});
-        }
-
-    } catch (error) {
-        res.status(500).json({message: "erreur lors de la récupération du profil", error});
-        console.log(error);
-    }
-
-    console.log("idUser = ",userId);
-
-});
+router.get('/profile', checkToken, getProfile);
 
 // route de mise à jour du profil utilisateur
-router.put('/profile/update', checkToken, async (req, res) => {
-    // récupération de l'id de l'utilisateur à partir du token
-    const userId = req.user.idUser;
-    // préparation de la requete de mise à jour
-    const updateUser = "UPDATE users SET name = ?, mail = ? WHERE idUser = ?;";
-    // récupération des informations à mettre à jour
-    const {name, mail} = req.body;
-
-    try {
-        // utilisation de la connexion bdd pour executer la requete
-        await db.query(updateUser, [name, mail, userId]);
-        // envoi de la réponse
-        res.status(200).json({message: "profil mis à jour"});
-    } catch (error) {
-        res.status(500).json({message: "erreur lors de la mise à jour du profil", error});
-        console.log(error);
-    }
-});     
+router.put('/profile/update', checkToken, updateProfile);     
 
 // route modification du mot de passe
-router.put('/profile/password', checkToken, async (req, res) => {
-    // récupération de l'id de l'utilisateur à partir du token
-    const userId = req.user.idUser;
-    // préparation de la requete de mise à jour
-    const updatePassword = "UPDATE users SET password = ? WHERE idUser = ?;";
-    // récupération des informations à mettre à jour
-    const {oldPassword, newPassword} = req.body;
-
-    try {
-        // récupération de l'utilisateur pour vérifier l'ancien mot de passe
-        const selectUser = "SELECT password FROM users WHERE idUser = ?;";
-        const [result] = await db.query(selectUser, [userId]);
-
-        if (result.length > 0) {
-            const userData = result[0];
-            // vérification de l'ancien mot de passe
-            const checkOldPassword = await bcrypt.compare(oldPassword, userData.password);
-
-            if (checkOldPassword) {
-                // cryptage du nouveau mot de passe
-                const cryptedNewPassword = await bcrypt.hashSync(newPassword, 10);
-                // utilisation de la connexion bdd pour executer la requete
-                await db.query(updatePassword, [cryptedNewPassword, userId]);
-                res.status(200).json({message: "mot de passe mis à jour"});
-            } else {
-                res.status(403).json({message: "ancien mot de passe incorrect"});
-            }
-        } else {
-            res.status(404).json({message: "utilisateur non trouvé"});
-        }
-        
-    } catch (error) {
-        res.status(500).json({message: "erreur lors de la mise à jour du mot de passe", error});
-        console.log(error);
-    }
-});
+router.put('/profile/password', checkToken, updatePassword);
 
 
 export default router;
