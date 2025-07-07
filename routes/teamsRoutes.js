@@ -92,6 +92,7 @@ router.get('/chooseTeams', checkToken, async (req, res) => {
     try {
         // Exécution de la requête pour récupérer les équipes de l'utilisateur
         const [teams] = await db.query(getTeams, [userId]);
+        console.log(teams);
         res.status(200).json(teams);
 
     } catch (error) {
@@ -109,7 +110,25 @@ router.get('/userTeams', checkToken, async (req, res) => {
 
         const [userTeams] = await db.query(getUserTeams, [userId]);
 
-        res.status(200).json(userTeams);
+        // console.log(userTeams);
+
+        // création d'un tableau pour stocker les équipes de l'utilisateur
+        // et les Pokémon associés
+        const pokemonTeam = userTeams.map(team => {
+            const pkm = [team.pkm1, team.pkm2, team.pkm3, team.pkm4, team.pkm5, team.pkm6].filter(Boolean)
+
+            return {
+                teamName: team.teamName,
+                pkm: pkm
+            }
+
+            
+        })
+
+        // console.log(pokemonTeam);
+        
+
+        res.status(200).json(pokemonTeam);
 
     } catch (error) {
 
