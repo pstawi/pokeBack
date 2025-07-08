@@ -5,7 +5,6 @@ import db from '../configuration/bd.js';
 // Cette fonction est appelée depuis le fichier userControllers.js
 export const addUser = (name, mail, cryptedPassword) => {
 
-    console.log("je suis dans le modèle");
     const insertUser = "INSERT INTO users (name, mail, password) VALUES (?,?,?);";
 
     // Exécute la requête d'insertion avec les paramètres fournis

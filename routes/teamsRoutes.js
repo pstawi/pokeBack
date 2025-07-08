@@ -1,6 +1,7 @@
 import express from 'express';
 import db from '../configuration/bd.js';
 import checkToken from '../middleware/checkToken.js';
+import { deleteTeams } from '../controllers/teamsControllers.js';
 
 const router = express.Router();
 
@@ -119,10 +120,9 @@ router.get('/userTeams', checkToken, async (req, res) => {
 
             return {
                 teamName: team.teamName,
-                pkm: pkm
+                pkm: pkm,
+                idTeams: team.idTeams
             }
-
-            
         })
 
         // console.log(pokemonTeam);
@@ -137,6 +137,8 @@ router.get('/userTeams', checkToken, async (req, res) => {
 
     }
 })
+
+router.delete('/deleteTeam/:idTeams', checkToken, deleteTeams);
 
 
 export default router;
